@@ -700,16 +700,23 @@ public class BulletPhysics implements PhysicsEngine {
         for (PairCachingGhostObject trigger : entityTriggers.values()) {
             EntityRef entity = (EntityRef) trigger.getUserPointer();
             for (BroadphasePair initialPair : trigger.getOverlappingPairCache().getOverlappingPairArray()) {
-                EntityRef otherEntity = null;
+                CollisionObject collisionObject;
                 if (initialPair.pProxy0.clientObject == trigger) {
-                    if (((CollisionObject) initialPair.pProxy1.clientObject).getUserPointer() instanceof EntityRef) {
-                        otherEntity = (EntityRef) ((CollisionObject) initialPair.pProxy1.clientObject).getUserPointer();
-                    }
+                    collisionObject = (CollisionObject) initialPair.pProxy1.clientObject;
                 } else {
-                    if (((CollisionObject) initialPair.pProxy0.clientObject).getUserPointer() instanceof EntityRef) {
-                        otherEntity = (EntityRef) ((CollisionObject) initialPair.pProxy0.clientObject).getUserPointer();
-                    }
+                    collisionObject = (CollisionObject) initialPair.pProxy0.clientObject;
                 }
+
+                EntityRef otherEntity = null;
+                if (collisionObject.getUserPointer() instanceof EntityRef) {
+                    // the other thing is another entity
+                    otherEntity = (EntityRef) ((CollisionObject) initialPair.pProxy0.clientObject).getUserPointer();
+                } else if (collisionObject.getUserPointer() instanceof Vector3i) {
+                    // the other thing is a block in the world
+                    Vector3i blockPosition = (Vector3i) collisionObject.getUserPointer();
+                    otherEntity = blockEntityRegistry.getBlockEntityAt(blockPosition);
+                }
+
                 if (otherEntity == null) {
                     continue;
                 }
